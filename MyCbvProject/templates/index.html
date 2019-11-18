@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+</head>
+<body>
+<h1>Here is My DATA</h1>
+<table id="data">
+    <thead>
+     <th>
+         Name
+     </th>
+    <th>
+        Total
+    </th>
+    <th>
+        Action
+    </th>
+    </thead>
+    <tbody>
+        {% for obj in student%}
+        <tr>
+            <td>{{obj.name}}</td>
+            <td>{{obj.total}}</td>
+            <td><button onclick="student_del('{{obj.id}}',this)">Delete</button></td>
+        </tr>
+
+        {%endfor%}
+    </tbody>
+
+</table>
+<form method="post">
+    {% csrf_token %}
+    {{form.as_p}}
+    <button type="button" onclick="save()">save</button>
+</form>
+
+</body>
+</html>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<script>
+var t;
+$(document).ready( function () {
+    t=$('#data').DataTable();
+});
+function save(){
+    $.ajax({
+          type: "POST",
+          url: "{% url 'student' %}",
+          data: {
+            'name': $('#id_name').val(),
+            'total': $('#id_total').val(),
+            'csrfmiddlewaretoken':$("input[name=csrfmiddlewaretoken]").val()
+          },
+          success: function (data) {
+
+              $('#id_name').val('')
+              $('#id_total').val('')
+              console.log(data.data);
+              id= data.data['id']
+              t.row.add([data.data['name'],
+                         data.data['total'],
+                         '<button onclick="student_del('+id+',this)">Delete</button>'
+                         ] ).draw( false );
+              swal("Save", "Successfully Saved");
+          }
+    });
+}
+
+function student_del(id,event){
+
+    $.ajax({
+          type: "POST",
+          url: '/cbv/delete/'+id+'/',
+          data: {
+            'csrfmiddlewaretoken':$("input[name=csrfmiddlewaretoken]").val()
+          },
+
+          success: function (data) {
+          t.row($(event).parents('tr')).remove().draw();
+
+          }
+    });
+}
+</script>
